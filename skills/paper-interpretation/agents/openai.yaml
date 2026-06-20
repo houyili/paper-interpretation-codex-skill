@@ -1,0 +1,4 @@
+interface:
+  display_name: "Paper Interpretation"
+  short_description: "PDF papers to grounded Chinese translations"
+  default_prompt: "Interpret and translate this paper PDF into a grounded Chinese Markdown report:"

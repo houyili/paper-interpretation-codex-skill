@@ -1,0 +1,23 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Generated extraction artifacts
+*_figures/
+*_tables.md
+*_footnotes.md
+*_paragraphs.jsonl
+*_paragraphs.md
+*_global_context.md
+*_full.txt
+*_MacDown.md
+equations/
+
+# Local scratch
+.codex/
+.agents/
+tmp/
+dist/

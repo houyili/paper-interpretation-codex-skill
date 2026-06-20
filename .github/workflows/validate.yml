@@ -1,0 +1,38 @@
+name: validate
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      - name: Compile helper scripts
+        run: |
+          python -m py_compile $(find skills/paper-interpretation/scripts -name '*.py' -print)
+      - name: Validate skill shape
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          skill = Path("skills/paper-interpretation/SKILL.md")
+          text = skill.read_text(encoding="utf-8")
+          assert text.startswith("---\n"), "SKILL.md must start with YAML frontmatter"
+          end = text.find("\n---", 4)
+          assert end != -1, "SKILL.md frontmatter is not closed"
+          frontmatter = text[4:end]
+          assert re.search(r"^name:\s*paper-interpretation\s*$", frontmatter, re.M)
+          assert re.search(r"^description:\s*.+", frontmatter, re.M)
+          for required in ["agents", "references", "scripts", "templates"]:
+              assert (skill.parent / required).exists(), f"missing {required}/"
+          PY
