@@ -19,20 +19,22 @@ jobs:
       - name: Compile helper scripts
         run: |
           python -m py_compile $(find skills/paper-interpretation/scripts -name '*.py' -print)
+      - name: Check installer shell syntax
+        run: |
+          sh -n install.sh
       - name: Validate skill shape
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          import re
-
-          skill = Path("skills/paper-interpretation/SKILL.md")
-          text = skill.read_text(encoding="utf-8")
-          assert text.startswith("---\n"), "SKILL.md must start with YAML frontmatter"
-          end = text.find("\n---", 4)
-          assert end != -1, "SKILL.md frontmatter is not closed"
-          frontmatter = text[4:end]
-          assert re.search(r"^name:\s*paper-interpretation\s*$", frontmatter, re.M)
-          assert re.search(r"^description:\s*.+", frontmatter, re.M)
-          for required in ["agents", "references", "scripts", "templates"]:
-              assert (skill.parent / required).exists(), f"missing {required}/"
-          PY
+          python scripts/validate_skill_shape.py
+      - name: Smoke-test installer lifecycle
+        run: |
+          chmod +x install.sh
+          export CODEX_HOME="$RUNNER_TEMP/codex-home"
+          ./install.sh install
+          ./install.sh doctor
+          ./install.sh upgrade
+          test -f "$CODEX_HOME/skills/paper-interpretation/SKILL.md"
+          test -f "$CODEX_HOME/skills/paper-interpretation/VERSION"
+          test -n "$(find "$CODEX_HOME/skills" -maxdepth 1 -name 'paper-interpretation.backup.*' -print)"
+          ./install.sh uninstall --purge-backups
+          test ! -e "$CODEX_HOME/skills/paper-interpretation"
+          test -z "$(find "$CODEX_HOME/skills" -maxdepth 1 -name 'paper-interpretation.backup.*' -print)"

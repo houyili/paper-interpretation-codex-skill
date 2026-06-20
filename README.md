@@ -30,19 +30,95 @@ and validates final Markdown outputs for common PDF extraction mistakes.
 │   └── paper-interpretation/
 │       ├── SKILL.md
 │       ├── agents/openai.yaml
+│       ├── VERSION
 │       ├── references/
 │       ├── scripts/
 │       └── templates/
+├── CHANGELOG.md
 ├── install.sh
+├── Makefile
 ├── requirements.txt
+├── VERSION
 └── README.md
 ```
 
 The actual Codex skill lives at `skills/paper-interpretation`.
 
-## Install
+## Quick Install
 
-### Option 1: Ask Codex to install from GitHub
+One-line install:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/houyili/paper-interpretation-codex-skill/main/install.sh | sh
+```
+
+Install with Python dependencies:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/houyili/paper-interpretation-codex-skill/main/install.sh | sh -s -- install --with-deps
+```
+
+The installer writes to:
+
+```text
+${CODEX_HOME:-$HOME/.codex}/skills/paper-interpretation
+```
+
+Restart Codex after installing or upgrading so the skill list is refreshed.
+
+## Upgrade
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/houyili/paper-interpretation-codex-skill/main/install.sh | sh -s -- upgrade
+```
+
+Upgrades keep a timestamped backup by default:
+
+```text
+~/.codex/skills/paper-interpretation.backup.YYYYMMDDHHMMSS
+```
+
+Skip the backup if you intentionally want a clean replacement:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/houyili/paper-interpretation-codex-skill/main/install.sh | sh -s -- upgrade --no-backup
+```
+
+Install or upgrade a specific tag/branch:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/houyili/paper-interpretation-codex-skill/main/install.sh | sh -s -- upgrade --ref v0.2.0
+```
+
+## Uninstall
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/houyili/paper-interpretation-codex-skill/main/install.sh | sh -s -- uninstall
+```
+
+The uninstall command verifies that the destination is actually the
+`paper-interpretation` skill before removing it.
+
+To remove upgrade backups as well:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/houyili/paper-interpretation-codex-skill/main/install.sh | sh -s -- uninstall --purge-backups
+```
+
+## Doctor
+
+Check whether the skill and helper dependencies are installed:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/houyili/paper-interpretation-codex-skill/main/install.sh | sh -s -- doctor
+```
+
+`doctor` treats Python, PyMuPDF, pdfplumber, and Pillow as required. It reports
+`rg`, `pdflatex`, `pdfinfo`, and `pdftoppm` as optional helper tools.
+
+## Alternative Install Paths
+
+### Ask Codex to install from GitHub
 
 In Codex, ask:
 
@@ -54,7 +130,7 @@ https://github.com/houyili/paper-interpretation-codex-skill/tree/main/skills/pap
 Codex should use the built-in `skill-installer` workflow. Restart Codex after
 installation so the skill is discovered.
 
-### Option 2: Manual clone
+### Manual clone
 
 ```bash
 git clone https://github.com/houyili/paper-interpretation-codex-skill.git
@@ -62,13 +138,17 @@ cd paper-interpretation-codex-skill
 ./install.sh
 ```
 
-If a previous copy already exists:
+Useful local commands:
 
 ```bash
-./install.sh --force
+./install.sh install
+./install.sh upgrade
+./install.sh uninstall
+./install.sh doctor
 ```
 
-The script installs into `${CODEX_HOME:-$HOME/.codex}/skills/paper-interpretation`.
+The same commands are available through `make install`, `make upgrade`,
+`make uninstall`, and `make doctor`.
 
 ## Python Dependencies
 
@@ -109,10 +189,8 @@ The default output contract is:
 Basic local checks:
 
 ```bash
-python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py \
-  skills/paper-interpretation
-
-python3 -m py_compile skills/paper-interpretation/scripts/*.py
+make validate
+sh -n install.sh
 ```
 
 For a real paper run, follow the workflow in `skills/paper-interpretation/SKILL.md`
@@ -123,6 +201,9 @@ python3 skills/paper-interpretation/scripts/validate_translation_output.py \
   --markdown output.md \
   --captions paper_figures/captions.json
 ```
+
+CI validates script syntax, helper script compilation, skill package shape, and
+the full installer lifecycle: install, doctor, upgrade, and uninstall.
 
 ## License
 
